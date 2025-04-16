@@ -67,12 +67,14 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
     abortControllerRef.current = new AbortController()
 
     try {
-      const res = await fetch("/api/games/create", {
+      const createGameUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/games/create`
+      const res = await fetch(createGameUrl, {
         method: "POST",
+        credentials: "include", // 确保包含 cookies
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ content: novelText }),
+        body: JSON.stringify({ novel_text: novelText, title:"" }),
         signal: abortControllerRef.current.signal,
       })
 
