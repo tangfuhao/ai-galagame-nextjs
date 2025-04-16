@@ -44,6 +44,7 @@ export default function SearchPage() {
 
         if (res.ok) {
           const data = await res.json()
+          console.log("Search results:", data)
           setResults(data)
         }
       } catch (error) {

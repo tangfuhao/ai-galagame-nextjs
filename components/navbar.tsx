@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Search, User, LogOut, PlusCircle, UserCircle } from "lucide-react"
+import { Search, User, LogOut, PlusCircle, UserCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -14,10 +14,12 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/use-auth"
 import { CreateGameModal } from "@/components/create-game-modal"
+import { LoginModal } from "@/components/login-modal"
 
 type SearchSuggestion = {
   games: Array<{ id: string; title: string }>
@@ -27,11 +29,12 @@ type SearchSuggestion = {
 
 export function Navbar() {
   const router = useRouter()
-  const { user, signIn, signOut } = useAuth()
+  const { user, signOut, isLoggingOut, rememberLogin, setRememberLogin } = useAuth()
   const [searchQuery, setSearchQuery] = useState("")
   const [suggestions, setSuggestions] = useState<SearchSuggestion | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loginModalOpen, setLoginModalOpen] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
 
   // 处理搜索建议
@@ -82,6 +85,9 @@ export function Navbar() {
     setIsModalOpen(true)
   }
 
+
+  //打印user
+  console.log("User:", user)
   return (
     <header className="border-b sticky top-0 z-50 bg-background">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -191,14 +197,27 @@ export function Navbar() {
                   <span>个人中心</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>退出登录</span>
+                <DropdownMenuCheckboxItem checked={rememberLogin} onCheckedChange={setRememberLogin}>
+                  记住登录状态
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={signOut} disabled={isLoggingOut}>
+                  {isLoggingOut ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>退出中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>退出登录</span>
+                    </>
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button onClick={signIn} variant="default">
+            <Button onClick={() => setLoginModalOpen(true)} variant="default">
               <User className="mr-2 h-4 w-4" />
               登录
             </Button>
@@ -207,6 +226,7 @@ export function Navbar() {
       </div>
 
       <CreateGameModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <LoginModal open={loginModalOpen} onOpenChange={setLoginModalOpen} />
     </header>
   )
 }
