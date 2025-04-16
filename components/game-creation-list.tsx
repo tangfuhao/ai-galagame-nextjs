@@ -28,12 +28,15 @@ export function GameCreationList() {
 
   const fetchGames = async () => {
     try {
-      const res = await fetch("/api/my-games", {
+      const myGamesUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/games`
+      const res = await fetch(myGamesUrl, {
+        credentials: "include", // 确保包含 cookies
         signal: AbortSignal.timeout(15000), // 15秒超时
       })
 
       if (res.ok) {
         const data = await res.json()
+        console.log("Games data:", data)
         setGames(data)
       } else {
         throw new Error("获取游戏列表失败")
