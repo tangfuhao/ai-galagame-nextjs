@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { RefreshCw, AlertTriangle, Edit, Play } from "lucide-react"
+import { RefreshCw, AlertTriangle, Edit, Play, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -28,7 +28,7 @@ export function GameCreationList() {
 
   const fetchGames = async () => {
     try {
-      const myGamesUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/games`
+      const myGamesUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/me/games`
       const res = await fetch(myGamesUrl, {
         credentials: "include", // 确保包含 cookies
         signal: AbortSignal.timeout(15000), // 15秒超时
@@ -93,6 +93,31 @@ export function GameCreationList() {
     }
   }
 
+  const handleDelete = async (gameId: string) => {
+    if (!confirm("确定要删除这个游戏吗？")) {
+      return
+    }
+    try {
+      const deleteUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/me/games/${gameId}`
+      const res = await fetch(deleteUrl, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      if (!res.ok) {
+        throw new Error("删除失败")
+      }
+      setGames((prevGames) => prevGames.filter((game) => game.id !== gameId))
+      toast({
+        description: "游戏已删除",
+      })
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        description: "删除失败，请重试",
+      })
+    }
+  }
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -130,7 +155,13 @@ export function GameCreationList() {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {games.map((game) => (
         <Card key={game.id}>
-          <CardContent className="p-6">
+          <CardContent className="p-6 relative group">
+            <button
+              onClick={() => handleDelete(game.id)}
+              className="absolute top-2 right-2 p-2 rounded-full bg-background/80 backdrop-blur hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
             <div className="flex flex-col space-y-4">
               <div>
                 <h3 className="font-semibold text-lg mb-1 line-clamp-1">{game.title || "未命名游戏"}</h3>
