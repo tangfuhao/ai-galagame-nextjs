@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import { GameData, Chapter, Branch, Character, Command, Resource } from "@/types/game"
 import { useAudioManager } from "@/lib/audio-manager-provider"
 
@@ -35,13 +35,43 @@ export function useGameState({ gameId }: UseGameStateProps) {
   const [narrationText, setNarrationText] = useState<string | null>("") // 设置默认值为空字符串
   const [choices, setChoices] = useState<{ id: string; text: string }[]>([])
 
+  const charactersCache = useRef<Map<string, string>>(new Map())
+
   // Process chapter data and extract resources
   const processChapterData = (chapter: Chapter): Chapter => {
     const resources: Resource[] = []
-    
+
+    charactersCache.current = new Map()
+
     // Extract resources from chapter commands
     chapter.branches.forEach(branch => {
       branch.commands.forEach(command => {
+        if (command.type === "dialogue") {
+          //如果是对话，提取角色信息
+          const character_name = command.name
+          if (!charactersCache.current.has(character_name)) {
+            //从chapter.characters匹配
+            const character = chapter.characters?.find(c => {
+              // 完全相等
+              if (c.name === character_name) return true
+              // character_name 包含于 c.name
+              if (c.name.includes(character_name)) return true
+              // c.name 包含于 character_name
+              if (character_name.includes(c.name)) return true
+              return false
+            })
+            if (character) {
+              resources.push({
+                name: character_name,
+                url: character.oss_url
+              })
+              charactersCache.current.set(character_name, character.oss_url)
+            }else{
+              charactersCache.current.set(character_name, "")
+            }
+          }
+        }
+
         if (command.oss_url) {
           switch (command.type) {
             case "bg":
@@ -56,15 +86,6 @@ export function useGameState({ gameId }: UseGameStateProps) {
       })
     })
 
-    // Add character sprites
-    chapter.characters?.forEach(character => {
-      if (character.oss_url) {
-        resources.push({
-          name: character.name,
-          url: character.oss_url
-        })
-      }
-    })
 
     return { ...chapter, dependencies: resources }
   }
@@ -148,10 +169,13 @@ export function useGameState({ gameId }: UseGameStateProps) {
         }
         setNarrationText(null)
         setChoices([])
+        setCurrentCharacter(null)
         setDialogueText(instruction.content || "") // 使用空字符串作为默认值
+
+        const characterImage = charactersCache.current.get(instruction.name)
         setCurrentCharacter({
           name: instruction.name,
-          oss_url: instruction.oss_url || "",
+          oss_url: characterImage || "",
           emotion: undefined,
           position: undefined,
         })
@@ -160,12 +184,14 @@ export function useGameState({ gameId }: UseGameStateProps) {
         // Reset UI state for new instruction
         setDialogueText(null)
         setChoices([])
+        setCurrentCharacter(null)
         setNarrationText(instruction.content || "") // 使用空字符串作为默认值
         break
       case "choice":
         // Reset UI state for new instruction
         setDialogueText(null)
         setNarrationText(null)
+        setCurrentCharacter(null)
         setChoices([])
         if (instruction.content) {
           try {

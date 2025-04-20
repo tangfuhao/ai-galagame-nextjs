@@ -81,11 +81,12 @@ export function GameInterface({ gameId }: { gameId: string }) {
       )}
 
       {/* Character Layer */}
-      {currentCharacter && (
+      {currentCharacter && currentCharacter.oss_url && (
         <Character
           character={currentCharacter.name}
           emotion={currentCharacter.emotion}
           position={currentCharacter.position || "center"}
+          oss_url={currentCharacter.oss_url}
         />
       )}
 

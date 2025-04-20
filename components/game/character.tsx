@@ -7,19 +7,22 @@ interface CharacterProps {
   character: string
   emotion?: string
   position: "left" | "center" | "right"
+  oss_url: string
 }
 
 interface CharacterState {
   character: string
   emotion: string
   position: "left" | "center" | "right"
+  oss_url: string
 }
 
-export function Character({ character, emotion = "normal", position }: CharacterProps) {
+export function Character({ character, emotion = "normal", position, oss_url }: CharacterProps) {
   const [current, setCurrent] = useState<CharacterState>({
     character,
     emotion,
     position,
+    oss_url,
   })
 
   const [previous, setPrevious] = useState<CharacterState | null>(null)
@@ -38,6 +41,7 @@ export function Character({ character, emotion = "normal", position }: Character
         character,
         emotion,
         position,
+        oss_url,
       })
 
       // Start transition
@@ -73,12 +77,13 @@ export function Character({ character, emotion = "normal", position }: Character
           ${isTransitioning ? "opacity-0" : "opacity-100"}`}
       >
         <Image
-          src={`/characters/${current.character}/${current.emotion}.png`}
+          src={current.oss_url}
           alt={current.character}
           width={400}
           height={600}
           priority
           className="object-contain"
+          crossOrigin="anonymous"
         />
       </div>
 
