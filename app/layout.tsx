@@ -5,6 +5,7 @@ import { AuthProvider } from "@/lib/auth-provider"
 import { cn } from "@/lib/utils"
 import "@/app/globals.css"
 import { Inter } from "next/font/google"
+import './globals.css'
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -34,4 +35,3 @@ export default function RootLayout({
 }
 
 
-import './globals.css'

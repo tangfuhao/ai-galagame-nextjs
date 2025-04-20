@@ -10,10 +10,12 @@ import { useGameState } from "@/hooks/game/use-game-state"
 import { useResourceLoader } from "@/hooks/game/use-resource-loader"
 
 export function GameInterface({ gameId }: { gameId: string }) {
-  const { currentScene, currentCharacter, dialogueText, narrationText, choices, isLoading, makeChoice, advanceStory } =
+  const { background, currentChapter, currentCharacter, dialogueText, narrationText, choices, isLoading, makeChoice, advanceStory } =
     useGameState({ gameId })
 
-  const { loadingProgress } = useResourceLoader(currentScene?.dependencies || [])
+  console.log("Current background:", background)
+
+  const { loadingProgress } = useResourceLoader(currentChapter?.dependencies || [])
 
   // Track text completion state
   const [isDialogueComplete, setIsDialogueComplete] = useState(true)
@@ -73,11 +75,13 @@ export function GameInterface({ gameId }: { gameId: string }) {
       </div>
     )
   }
-
+  console.log("Current background:", background)
   return (
-    <div className="relative w-full max-w-4xl mx-auto cursor-pointer" onClick={handleGameAreaClick}>
+    <div className="relative w-full h-full mx-auto cursor-pointer bg-red-500" onClick={handleGameAreaClick}>
       {/* Background Layer */}
-      <Background src={currentScene?.background || "/backgrounds/forest.jpg"} />
+      {background && (
+        <Background src={background || "/backgrounds/forest.jpg"} />
+      )}
 
       {/* Character Layer */}
       {currentCharacter && (

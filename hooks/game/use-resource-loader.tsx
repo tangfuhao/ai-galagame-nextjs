@@ -1,66 +1,65 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Resource } from "@/types/game"
 
-interface Resource {
-  type: "sprite" | "audio" | "background"
-  name: string
-  versioned_url: string
-  preload_priority: number
-}
-
-export function useResourceLoader(resources: Resource[]) {
-  const [loadedResources, setLoadedResources] = useState<Set<string>>(new Set())
+export function useResourceLoader(dependencies: Resource[]) {
   const [loadingProgress, setLoadingProgress] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!resources.length) {
-      setLoadingProgress(100)
-      return
-    }
-
-    // Sort resources by priority
-    const sortedResources = [...resources].sort((a, b) => a.preload_priority - b.preload_priority)
-
-    let loaded = 0
-    const totalToLoad = sortedResources.length
-
-    // Load resources in parallel but track them in priority order
-    const loadResource = async (resource: Resource) => {
-      try {
-        if (resource.type === "sprite" || resource.type === "background") {
-          // Preload image
-          const img = new Image()
-          img.src = resource.versioned_url
-          await new Promise((resolve, reject) => {
-            img.onload = resolve
-            img.onerror = reject
-          })
-        } else if (resource.type === "audio") {
-          // Preload audio
-          const audio = new Audio()
-          audio.src = resource.versioned_url
-          await new Promise((resolve, reject) => {
-            audio.oncanplaythrough = resolve
-            audio.onerror = reject
-          })
-        }
-
-        // Mark as loaded
-        setLoadedResources((prev) => new Set([...prev, resource.name]))
-        loaded++
-        setLoadingProgress(Math.floor((loaded / totalToLoad) * 100))
-      } catch (error) {
-        console.error(`Failed to load resource ${resource.name}:`, error)
-        // Still increment counter to avoid getting stuck
-        loaded++
-        setLoadingProgress(Math.floor((loaded / totalToLoad) * 100))
+    const loadResources = async () => {
+      const totalResources = dependencies.length
+      if (totalResources === 0) {
+        setLoadingProgress(100)
+        setIsLoading(false)
+        return
       }
+
+      let loadedCount = 0
+
+      const loadPromises = dependencies.map((resource) => {
+        return new Promise<void>((resolve) => {
+          if (resource.url.endsWith(".mp3") || resource.url.endsWith(".wav")) {
+            // Load audio
+            const audio = new Audio()
+            audio.src = resource.url
+            audio.oncanplaythrough = () => {
+              loadedCount++
+              setLoadingProgress(Math.round((loadedCount / totalResources) * 100))
+              resolve()
+            }
+            audio.onerror = () => {
+              console.error(`Failed to load audio: ${resource.url}`)
+              loadedCount++
+              setLoadingProgress(Math.round((loadedCount / totalResources) * 100))
+              resolve()
+            }
+          } else {
+            // Load image
+            const img = new Image()
+            img.src = resource.url
+            img.onload = () => {
+              loadedCount++
+              setLoadingProgress(Math.round((loadedCount / totalResources) * 100))
+              resolve()
+            }
+            img.onerror = () => {
+              console.error(`Failed to load image: ${resource.url}`)
+              loadedCount++
+              setLoadingProgress(Math.round((loadedCount / totalResources) * 100))
+              resolve()
+            }
+          }
+        })
+      })
+
+      await Promise.all(loadPromises)
+      setIsLoading(false)
     }
 
-    // Start loading all resources
-    Promise.all(sortedResources.map(loadResource))
-  }, [resources])
+    loadResources()
+  }, [dependencies])
 
-  return { loadedResources, loadingProgress }
+  return { loadingProgress, isLoading }
 }

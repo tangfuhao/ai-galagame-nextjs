@@ -1,140 +1,13 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { GameData, Chapter, Branch, Character, Command, Resource } from "@/types/game"
 
-// Types based on your API interface specifications
 interface GameHistory {
   current_chapter: string
   unlocked_branches: string[]
   inventory: { items: string[]; skills: string[] }
 }
-
-interface GameData {
-  total_chapters: number
-  chapter_list: ChapterItem[]
-}
-
-interface ChapterItem {
-  id: string
-  branches: Branch[]
-  dependencies: Resource[]
-}
-
-interface Branch {
-  id: string
-  instructions: Instruction[]
-  requirements?: {
-    items?: string[]
-    skills?: string[]
-  }
-}
-
-interface Resource {
-  type: "sprite" | "audio" | "background"
-  name: string
-  versioned_url: string
-  preload_priority: number
-}
-
-type Instruction =
-  | { type: "narration"; text: string }
-  | { type: "dialogue"; character: string; emotion?: string; text: string; position?: "left" | "center" | "right" }
-  | { type: "choice"; options: { id: string; text: string; branch: string }[] }
-  | { type: "jump"; target: string }
-  | { type: "background"; src: string }
-  | { type: "audio"; src: string; loop?: boolean }
-
-interface Character {
-  name: string
-  emotion?: string
-  position?: "left" | "center" | "right"
-}
-
-// // Mock data for demonstration
-// const MOCK_GAME_DATA: GameData = {
-//   total_chapters: 1,
-//   chapter_list: [
-//     {
-//       id: "chapter1",
-//       branches: [
-//         {
-//           id: "start",
-//           instructions: [
-//             { type: "background", src: "/backgrounds/forest.jpg" },
-//             { type: "narration", text: "按照常识，羊的荷包里大概装着汗巾或黑锅，可里面却什么都没有。" },
-//             {
-//               type: "dialogue",
-//               character: "舌头",
-//               emotion: "normal",
-//               text: "喂，问你呢，干嘛不说话，处理干净了吗！？",
-//               position: "center",
-//             },
-//             {
-//               type: "choice",
-//               options: [
-//                 { id: "choice1", text: "表示愿意接下这个话。", branch: "accept" },
-//                 { id: "choice2", text: "先看小羊，再做决定。", branch: "wait" },
-//               ],
-//             },
-//           ],
-//           requirements: {},
-//         },
-//         {
-//           id: "accept",
-//           instructions: [
-//             { type: "background", src: "/backgrounds/forest.jpg" },
-//             {
-//               type: "dialogue",
-//               character: "舌头",
-//               emotion: "happy",
-//               text: "很好，我就知道你会同意的。这个任务很重要，请务必认真对待！",
-//               position: "center",
-//             },
-//             { type: "narration", text: "你点了点头，表示理解。这看起来是个不小的挑战，但你已经准备好了。" },
-//             { type: "background", src: "/backgrounds/village.jpg" },
-//             {
-//               type: "dialogue",
-//               character: "舌头",
-//               emotion: "normal",
-//               text: "记住，一切都要小心谨慎。这不是普通的工作，而是关乎生死的任务。",
-//               position: "left",
-//             },
-//             // More instructions...
-//           ],
-//         },
-//         {
-//           id: "wait",
-//           instructions: [
-//             { type: "background", src: "/backgrounds/forest.jpg" },
-//             { type: "narration", text: "你决定先观察一下情况，再做决定。毕竟，贸然行动可能会带来不必要的麻烦。" },
-//             {
-//               type: "dialogue",
-//               character: "舌头",
-//               emotion: "normal",
-//               text: "怎么了？有什么问题吗？时间不等人，我们必须尽快行动！",
-//               position: "right",
-//             },
-//             { type: "background", src: "/backgrounds/village.jpg" },
-//             {
-//               type: "dialogue",
-//               character: "舌头",
-//               emotion: "happy",
-//               text: "算了，既然你犹豫不决，那我们先回村子吧。",
-//               position: "center",
-//             },
-//             // More instructions...
-//           ],
-//         },
-//       ],
-//       dependencies: [
-//         { type: "background", name: "forest", versioned_url: "/backgrounds/forest.jpg", preload_priority: 1 },
-//         { type: "background", name: "village", versioned_url: "/backgrounds/village.jpg", preload_priority: 2 },
-//         { type: "sprite", name: "舌头_normal", versioned_url: "/characters/舌头/normal.png", preload_priority: 1 },
-//         { type: "sprite", name: "舌头_happy", versioned_url: "/characters/舌头/happy.png", preload_priority: 2 },
-//       ],
-//     },
-//   ],
-// }
 
 interface UseGameStateProps {
   gameId: string
@@ -143,12 +16,12 @@ interface UseGameStateProps {
 export function useGameState({ gameId }: UseGameStateProps) {
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [gameHistory, setGameHistory] = useState<GameHistory>({
-    current_chapter: "chapter1",
-    unlocked_branches: ["start"],
+    current_chapter: "1", // 设置默认值为第一章
+    unlocked_branches: ["main"], // 设置默认值为主分支
     inventory: { items: [], skills: [] },
   })
 
-  const [currentChapter, setCurrentChapter] = useState<ChapterItem | null>(null)
+  const [currentChapter, setCurrentChapter] = useState<Chapter | null>(null)
   const [currentBranch, setCurrentBranch] = useState<Branch | null>(null)
   const [instructionIndex, setInstructionIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
@@ -157,51 +30,107 @@ export function useGameState({ gameId }: UseGameStateProps) {
   const [background, setBackground] = useState<string | null>(null)
   const [currentCharacter, setCurrentCharacter] = useState<Character | null>(null)
   const [dialogueText, setDialogueText] = useState<string | null>(null)
-  const [narrationText, setNarrationText] = useState<string | null>(null)
+  const [narrationText, setNarrationText] = useState<string | null>("") // 设置默认值为空字符串
   const [choices, setChoices] = useState<{ id: string; text: string }[]>([])
+
+  // Process chapter data and extract resources
+  const processChapterData = (chapter: Chapter): Chapter => {
+    const resources: Resource[] = []
+    
+    // Extract resources from chapter commands
+    chapter.branches.forEach(branch => {
+      branch.commands.forEach(command => {
+        if (command.oss_url) {
+          switch (command.type) {
+            case "bg":
+            case "bgm":
+              resources.push({
+                name: command.name,
+                url: command.oss_url
+              })
+              break
+          }
+        }
+      })
+    })
+
+    // Add character sprites
+    chapter.characters?.forEach(character => {
+      if (character.oss_url) {
+        resources.push({
+          name: character.name,
+          url: character.oss_url
+        })
+      }
+    })
+
+    return { ...chapter, dependencies: resources }
+  }
 
   // Load game data
   useEffect(() => {
-    // In a real implementation, this would be an API call
     const loadGameData = async () => {
       try {
-        // TODO: Fetch game data from API
-        const fetchGameUrl = `${process.env.NEXT_PUBLIC_API_URL}/games/${gameId}`
+        const fetchGameUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/games/${gameId}`
         const res = await fetch(fetchGameUrl)
         if (!res.ok) {
           throw new Error("Failed to load game data")
         }
         const data = await res.json()
         console.log("Game data loaded:", data)
+        
+        // Process chapters and extract resources
+        const processedData = {
+          ...data,
+          chapters: data.chapters.map(processChapterData)
+        }
+        
+        console.log("Game data processed:", processedData)
+        setGameData(processedData)
+        
+        // Set initial chapter and branch
+        const initialChapter = processedData.chapters.find(
+          (c: Chapter) => c.id === gameHistory.current_chapter
+        )
+        if (initialChapter) {
+          setCurrentChapter(initialChapter)
+          const initialBranch = initialChapter.branches.find(
+            (b: Branch) => b.name === gameHistory.unlocked_branches[0]
+          )
+          if (initialBranch) {
+            setCurrentBranch(initialBranch)
+            setInstructionIndex(0)
+            setIsLoading(false)
+          }
+        }
       } catch (error) {
         console.error("Failed to load game data:", error)
       }
     }
 
     loadGameData()
-  }, [gameId])
+  }, [gameId, gameHistory])
 
-  // Set current chapter and branch when game data is loaded
+  // Remove the old chapter loading effect since we handle it in loadGameData now
   useEffect(() => {
     if (!gameData) return
 
-    const chapter = gameData.chapter_list.find((c) => c.id === gameHistory.current_chapter)
-    if (chapter) {
+    const chapter = gameData.chapters.find((chapter: Chapter) => chapter.id === gameHistory.current_chapter)
+    if (chapter && chapter.id !== currentChapter?.id) {
       setCurrentChapter(chapter)
-      const branch = chapter.branches.find((b) => b.id === gameHistory.unlocked_branches[0])
+      const branch = chapter.branches.find((branch: Branch) => branch.name === gameHistory.unlocked_branches[0])
       if (branch) {
         setCurrentBranch(branch)
         setInstructionIndex(0)
-        setIsLoading(false)
       }
     }
-  }, [gameData, gameHistory])
+  }, [gameData, gameHistory, currentChapter?.id])
 
   // Process current instruction
   useEffect(() => {
-    if (!currentBranch || instructionIndex >= currentBranch.instructions.length) return
+    if (!currentBranch || instructionIndex >= currentBranch.commands.length) return
 
-    const instruction = currentBranch.instructions[instructionIndex]
+    const instruction = currentBranch.commands[instructionIndex]
 
     // Reset UI state for new instruction
     setDialogueText(null)
@@ -209,32 +138,44 @@ export function useGameState({ gameId }: UseGameStateProps) {
     setChoices([])
 
     switch (instruction.type) {
-      case "background":
-        setBackground(instruction.src)
+      case "bg":
+        setBackground(instruction.oss_url)
         break
       case "dialogue":
-        setDialogueText(instruction.text)
+        setDialogueText(instruction.content || "") // 使用空字符串作为默认值
         setCurrentCharacter({
-          name: instruction.character,
-          emotion: instruction.emotion,
-          position: instruction.position,
+          name: instruction.name,
+          oss_url: instruction.oss_url || "",
+          emotion: undefined,
+          position: undefined,
         })
         break
       case "narration":
-        setNarrationText(instruction.text)
+        setNarrationText(instruction.content || "") // 使用空字符串作为默认值
         break
       case "choice":
-        setChoices(instruction.options.map((opt) => ({ id: opt.id, text: opt.text })))
+        if (instruction.content) {
+          try {
+            const options = JSON.parse(instruction.content)
+            setChoices(options.map((opt: { text: string; target: string }) => ({
+              id: opt.target,
+              text: opt.text
+            })))
+          } catch (e) {
+            console.error("Failed to parse choice options:", e)
+            setChoices([])
+          }
+        }
         break
       case "jump":
         // Handle jump to another branch
-        const targetBranch = currentChapter?.branches.find((b) => b.id === instruction.target)
+        const targetBranch = currentChapter?.branches.find((b: Branch) => b.name === instruction.content)
         if (targetBranch) {
           setCurrentBranch(targetBranch)
           setInstructionIndex(0)
         }
         break
-      case "audio":
+      case "bgm":
         // Audio handling would go here
         break
     }
@@ -246,7 +187,7 @@ export function useGameState({ gameId }: UseGameStateProps) {
 
     // Check if current text display is complete
     const isTextComplete = (() => {
-      const currentInstruction = currentBranch.instructions[instructionIndex]
+      const currentInstruction = currentBranch.commands[instructionIndex]
       if (currentInstruction.type === "dialogue" || currentInstruction.type === "narration") {
         // This is handled by the UI components now
         return true
@@ -254,8 +195,8 @@ export function useGameState({ gameId }: UseGameStateProps) {
       return true
     })()
 
-    if (isTextComplete && instructionIndex < currentBranch.instructions.length - 1) {
-      setInstructionIndex((prev) => prev + 1)
+    if (isTextComplete && instructionIndex < currentBranch.commands.length - 1) {
+      setInstructionIndex((prev: number) => prev + 1)
     }
   }, [currentBranch, instructionIndex])
 
@@ -264,18 +205,18 @@ export function useGameState({ gameId }: UseGameStateProps) {
     (choiceId: string) => {
       if (!currentBranch || !currentChapter) return
 
-      const instruction = currentBranch.instructions[instructionIndex]
+      const instruction = currentBranch.commands[instructionIndex]
       if (instruction.type !== "choice") return
 
-      const selectedOption = instruction.options.find((opt) => opt.id === choiceId)
+      const selectedOption = currentBranch.commands.find((opt: Command) => opt.name === choiceId)
       if (!selectedOption) return
 
-      const targetBranch = currentChapter.branches.find((b) => b.id === selectedOption.branch)
+      const targetBranch = currentChapter.branches.find((b: Branch) => b.name === selectedOption.content)
       if (targetBranch) {
         // Update game history
-        setGameHistory((prev) => ({
+        setGameHistory((prev: GameHistory) => ({
           ...prev,
-          unlocked_branches: [...prev.unlocked_branches, targetBranch.id],
+          unlocked_branches: [...prev.unlocked_branches, targetBranch.name],
         }))
 
         // Switch to new branch
@@ -287,7 +228,8 @@ export function useGameState({ gameId }: UseGameStateProps) {
   )
 
   return {
-    currentScene: { background },
+    background,
+    currentChapter,
     currentCharacter,
     dialogueText,
     narrationText,

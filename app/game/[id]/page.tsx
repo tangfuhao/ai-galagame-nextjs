@@ -90,9 +90,9 @@ export default function GamePage() {
   // }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-screen flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-6  flex flex-col min-h-0">
+      <main className="flex-1 container mx-auto px-4 py-6  flex flex-col">
         <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
@@ -108,7 +108,7 @@ export default function GamePage() {
         </p> */}
         </div>
 
-        <div className="flex-1 w-full flex items-center justify-center min-h-0 bg-black">
+        <div className="flex-1 w-full flex items-center justify-center bg-black">
           <GameInterface gameId={gameId} />
         </div>
       </main>
