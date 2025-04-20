@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react"
 import { GameData, Chapter, Branch, Character, Command, Resource } from "@/types/game"
+import { useAudioManager } from "@/lib/audio-manager-provider"
 
 interface GameHistory {
   current_chapter: string
@@ -14,6 +15,7 @@ interface UseGameStateProps {
 }
 
 export function useGameState({ gameId }: UseGameStateProps) {
+  const { playBg, playDialogue } = useAudioManager()  
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [gameHistory, setGameHistory] = useState<GameHistory>({
     current_chapter: "1", // 设置默认值为第一章
@@ -77,7 +79,7 @@ export function useGameState({ gameId }: UseGameStateProps) {
           throw new Error("Failed to load game data")
         }
         const data = await res.json()
-        console.log("Game data loaded:", data)
+        // console.log("Game data loaded:", data)
         
         // Process chapters and extract resources
         const processedData = {
@@ -141,6 +143,9 @@ export function useGameState({ gameId }: UseGameStateProps) {
         break
       case "dialogue":
         // Reset UI state for new instruction
+        if (instruction.oss_url) {
+          playDialogue(instruction.oss_url)
+        }
         setNarrationText(null)
         setChoices([])
         setDialogueText(instruction.content || "") // 使用空字符串作为默认值
@@ -185,6 +190,9 @@ export function useGameState({ gameId }: UseGameStateProps) {
         break
       case "bgm":
         // Audio handling would go here
+        if (instruction.oss_url) {
+          playBg(instruction.oss_url)
+        }
         //直接跳到下一条指令
         setInstructionIndex(instructionIndex + 1)
         break

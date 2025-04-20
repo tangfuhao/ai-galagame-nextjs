@@ -13,8 +13,6 @@ export function GameInterface({ gameId }: { gameId: string }) {
   const { background, currentChapter, currentCharacter, dialogueText, narrationText, choices, isLoading, makeChoice, advanceStory } =
     useGameState({ gameId })
 
-  console.log("Current background:", background)
-
   const { loadingProgress } = useResourceLoader(currentChapter?.dependencies || [])
 
   // Track text completion state
@@ -75,7 +73,6 @@ export function GameInterface({ gameId }: { gameId: string }) {
       </div>
     )
   }
-  console.log("Current narrationText:", narrationText)
   return (
     <div className="relative w-full h-full mx-auto cursor-pointer bg-red-500" onClick={handleGameAreaClick}>
       {/* Background Layer */}
