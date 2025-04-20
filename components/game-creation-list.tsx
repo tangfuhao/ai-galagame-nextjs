@@ -67,7 +67,9 @@ export function GameCreationList() {
 
   const handleRetry = async (gameId: string) => {
     try {
-      const res = await fetch(`/api/games/${gameId}/retry`, {
+      const retryGameUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/games/${gameId}/regenerate`
+      const res = await fetch(retryGameUrl, {
+        credentials: "include", // 确保包含 cookies
         method: "POST",
       })
 
@@ -79,7 +81,7 @@ export function GameCreationList() {
 
         // 更新游戏状态
         setGames((prev) =>
-          prev.map((game) => (game.id === gameId ? { ...game, status: "generating", progress: 0 } : game)),
+          prev.map((game) => (game.id === gameId ? { ...game, status: "generating" } : game)),
         )
       } else {
         throw new Error("重试失败")
