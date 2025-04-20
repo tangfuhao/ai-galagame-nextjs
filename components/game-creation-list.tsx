@@ -12,6 +12,7 @@ import { useToast } from "@/components/ui/use-toast"
 
 type GameCreation = {
   id: string
+  runtime_id: string | null
   title: string
   cover_image: string | null
   status: "generating" | "published" | "failed"
@@ -218,7 +219,7 @@ export function GameCreationList() {
                       <Edit className="h-4 w-4 mr-1" />
                       编辑
                     </Button>
-                    <Button size="sm" onClick={() => router.push(`/game/${game.id}`)}>
+                    <Button size="sm" onClick={() => router.push(`/game/${game.runtime_id}`)}>
                       <Play className="h-4 w-4 mr-1" />
                       游玩
                     </Button>
