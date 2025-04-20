@@ -1,23 +1,22 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Navbar } from "@/components/navbar"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/components/ui/use-toast"
-import { ArrowLeft } from "lucide-react"
-import { GameInterface } from "@/components/game/game-interface"
-
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Navbar } from "@/components/navbar";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/use-toast";
+import { ArrowLeft } from "lucide-react";
+import { GameInterface } from "@/components/game/game-interface";
 
 export default function GamePage() {
-  const params = useParams()
-  const router = useRouter()
+  const params = useParams();
+  const router = useRouter();
   // const { toast } = useToast()
   // const [game, setGame] = useState<Game | null>(null)
   // const [loading, setLoading] = useState(true)
   // const [error, setError] = useState<string | null>(null)
-  const gameId = params.id
+  const gameId = params.id as string;
 
   // useEffect(() => {
   //   const fetchGame = async () => {
@@ -93,19 +92,26 @@ export default function GamePage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-6">
-        <Button variant="ghost" className="mb-6" onClick={() => router.back()}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          返回
-        </Button>
+      <main className="flex-1 container mx-auto px-4 py-6  flex flex-col min-h-0">
+        <div className="flex items-center justify-between mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            返回
+          </Button>
 
-        {/* <h1 className="text-3xl font-bold mb-2">{game.title}</h1>
+          {/* <h1 className="text-3xl font-bold mb-2">{game.title}</h1>
         <p className="text-muted-foreground mb-8">
           由 <span className="font-medium">{game.author.username}</span> 创作
         </p> */}
+        </div>
 
-        <GameInterface gameId={game.id} />
+        <div className="flex-1 w-full flex items-center justify-center min-h-0 bg-black">
+          <GameInterface gameId={gameId} />
+        </div>
       </main>
     </div>
-  )
+  );
 }

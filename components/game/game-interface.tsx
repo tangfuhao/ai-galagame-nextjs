@@ -65,7 +65,7 @@ export function GameInterface({ gameId }: { gameId: string }) {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-black text-white">
+      <div className="w-full flex-1 flex items-center justify-center bg-black text-white">
         <div className="w-64 bg-gray-800 rounded-lg overflow-hidden">
           <div className="h-2 bg-white transition-all duration-300" style={{ width: `${loadingProgress}%` }} />
           <div className="text-center p-2 text-sm">加载中... {loadingProgress}%</div>
@@ -75,7 +75,7 @@ export function GameInterface({ gameId }: { gameId: string }) {
   }
 
   return (
-    <div className="relative w-full h-full cursor-pointer" onClick={handleGameAreaClick}>
+    <div className="relative w-full max-w-4xl mx-auto cursor-pointer" onClick={handleGameAreaClick}>
       {/* Background Layer */}
       <Background src={currentScene?.background || "/backgrounds/forest.jpg"} />
 
