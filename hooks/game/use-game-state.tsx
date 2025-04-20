@@ -109,7 +109,7 @@ export function useGameState({ gameId }: UseGameStateProps) {
     }
 
     loadGameData()
-  }, [gameId, gameHistory])
+  }, [gameId])
 
   // Remove the old chapter loading effect since we handle it in loadGameData now
   useEffect(() => {
@@ -132,16 +132,17 @@ export function useGameState({ gameId }: UseGameStateProps) {
 
     const instruction = currentBranch.commands[instructionIndex]
 
-    // Reset UI state for new instruction
-    setDialogueText(null)
-    setNarrationText(null)
-    setChoices([])
 
     switch (instruction.type) {
       case "bg":
         setBackground(instruction.oss_url)
+        //直接跳到下一条指令
+        setInstructionIndex(instructionIndex + 1)
         break
       case "dialogue":
+        // Reset UI state for new instruction
+        setNarrationText(null)
+        setChoices([])
         setDialogueText(instruction.content || "") // 使用空字符串作为默认值
         setCurrentCharacter({
           name: instruction.name,
@@ -151,9 +152,16 @@ export function useGameState({ gameId }: UseGameStateProps) {
         })
         break
       case "narration":
+        // Reset UI state for new instruction
+        setDialogueText(null)
+        setChoices([])
         setNarrationText(instruction.content || "") // 使用空字符串作为默认值
         break
       case "choice":
+        // Reset UI state for new instruction
+        setDialogueText(null)
+        setNarrationText(null)
+        setChoices([])
         if (instruction.content) {
           try {
             const options = JSON.parse(instruction.content)
@@ -177,6 +185,8 @@ export function useGameState({ gameId }: UseGameStateProps) {
         break
       case "bgm":
         // Audio handling would go here
+        //直接跳到下一条指令
+        setInstructionIndex(instructionIndex + 1)
         break
     }
   }, [currentBranch, instructionIndex, currentChapter])
@@ -207,11 +217,7 @@ export function useGameState({ gameId }: UseGameStateProps) {
 
       const instruction = currentBranch.commands[instructionIndex]
       if (instruction.type !== "choice") return
-
-      const selectedOption = currentBranch.commands.find((opt: Command) => opt.name === choiceId)
-      if (!selectedOption) return
-
-      const targetBranch = currentChapter.branches.find((b: Branch) => b.name === selectedOption.content)
+      const targetBranch = currentChapter.branches.find((b: Branch) => b.name === choiceId)
       if (targetBranch) {
         // Update game history
         setGameHistory((prev: GameHistory) => ({

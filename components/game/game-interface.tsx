@@ -75,7 +75,7 @@ export function GameInterface({ gameId }: { gameId: string }) {
       </div>
     )
   }
-  console.log("Current background:", background)
+  console.log("Current narrationText:", narrationText)
   return (
     <div className="relative w-full h-full mx-auto cursor-pointer bg-red-500" onClick={handleGameAreaClick}>
       {/* Background Layer */}
