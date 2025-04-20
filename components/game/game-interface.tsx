@@ -74,7 +74,7 @@ export function GameInterface({ gameId }: { gameId: string }) {
     )
   }
   return (
-    <div className="relative w-full h-full mx-auto cursor-pointer bg-red-500" onClick={handleGameAreaClick}>
+    <div className="relative w-full h-full mx-auto cursor-pointer" onClick={handleGameAreaClick}>
       {/* Background Layer */}
       {background && (
         <Background src={background || "/backgrounds/forest.jpg"} />

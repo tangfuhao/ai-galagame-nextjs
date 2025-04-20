@@ -31,8 +31,7 @@ export function AudioManagerProvider({ children }: { children: ReactNode }) {
 
   // 播放背景音乐
   const playBg = (src: string, options = { loop: true }) => {
-    src = src.replace("https://midreal-image-sh.", "");
-    console.log("play bg", src);
+    
     const audio = bgAudioRef.current;
     if (audio.src !== src) {
       audio.pause();
@@ -52,9 +51,7 @@ export function AudioManagerProvider({ children }: { children: ReactNode }) {
   };
 
   // 播放角色对话
-  const playDialogue = (src: string, options = { loop: false }) => {
-    src = src.replace("https://midreal-image-sh.", "");
-    console.log("play dialogue", src);
+  const playDialogue = (src: string, options = { loop: false }) => {    
     const audio = dlgAudioRef.current;
     if (audio.src !== src) {
       audio.pause();
