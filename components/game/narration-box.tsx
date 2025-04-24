@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, memo } from "react"
 
 interface NarrationBoxProps {
   text: string
@@ -8,13 +8,18 @@ interface NarrationBoxProps {
   onComplete: () => void
 }
 
-export function NarrationBox({ text, isComplete, onComplete }: NarrationBoxProps) {
+export const NarrationBox = memo(function NarrationBox({
+  text, 
+  isComplete, 
+  onComplete
+}: NarrationBoxProps) {
   const [displayedText, setDisplayedText] = useState("")
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const textRef = useRef(text)
 
   // Text typing effect
   useEffect(() => {
+    console.log("NarrationBox 更新1")
     // Reset when text changes
     textRef.current = text
     setDisplayedText("")
@@ -48,12 +53,15 @@ export function NarrationBox({ text, isComplete, onComplete }: NarrationBoxProps
         timerRef.current = null
       }
     }
-  }, [text, onComplete])
+  }, [text])
 
   // Handle forced completion
   useEffect(() => {
+    // console.log("NarrationBox 更新2, displayedText", displayedText)
     if (isComplete && displayedText !== textRef.current) {
+      console.log("displayedText", displayedText)
       // Force complete the text
+      // console.log("NarrationBox 更新2")
       setDisplayedText(textRef.current)
 
       // Clear the typing timer
@@ -74,4 +82,12 @@ export function NarrationBox({ text, isComplete, onComplete }: NarrationBoxProps
       </div>
     </div>
   )
+},
+// 自定义比较函数
+(prevProps, nextProps) => {
+  return (
+    prevProps.text === nextProps.text &&
+    prevProps.isComplete === nextProps.isComplete
+  );
 }
+);

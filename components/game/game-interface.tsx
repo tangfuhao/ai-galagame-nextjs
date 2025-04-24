@@ -16,8 +16,8 @@ export function GameInterface({ gameId }: { gameId: string }) {
   const { loadingProgress } = useResourceLoader(currentChapter?.dependencies || [])
 
   // Track text completion state
-  const [isDialogueComplete, setIsDialogueComplete] = useState(true)
-  const [isNarrationComplete, setIsNarrationComplete] = useState(true)
+  const [isDialogueComplete, setIsDialogueComplete] = useState(false)
+  const [isNarrationComplete, setIsNarrationComplete] = useState(false)
 
   // Handle click on game area
   const handleGameAreaClick = () => {
@@ -28,27 +28,13 @@ export function GameInterface({ gameId }: { gameId: string }) {
 
     // If either dialogue or narration is not complete, complete it
     if (!isDialogueComplete || !isNarrationComplete) {
-      if (!isDialogueComplete) setIsDialogueComplete(true)
-      if (!isNarrationComplete) setIsNarrationComplete(true)
+      setIsDialogueComplete(true)
+      setIsNarrationComplete(true)
     } else {
       // Both are complete, advance to next
       advanceStory()
     }
   }
-
-  // Handle keyboard events
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === " " || e.key === "Enter") {
-        handleGameAreaClick()
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [isDialogueComplete, isNarrationComplete, choices.length])
 
   // Reset completion state when text changes
   useEffect(() => {

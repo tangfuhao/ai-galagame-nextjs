@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, memo } from "react"
 
 interface DialogueBoxProps {
   text: string
@@ -9,13 +9,19 @@ interface DialogueBoxProps {
   onComplete: () => void
 }
 
-export function DialogueBox({ text, character, isComplete, onComplete }: DialogueBoxProps) {
+export const DialogueBox = memo(function DialogueBox({ 
+  text, 
+  character, 
+  isComplete, 
+  onComplete 
+}: DialogueBoxProps) {
   const [displayedText, setDisplayedText] = useState("")
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const textRef = useRef(text)
 
   // Text typing effect
   useEffect(() => {
+    console.log("DialogueBox 更新1", text)
     // Reset when text changes
     textRef.current = text
     setDisplayedText("")
@@ -53,6 +59,7 @@ export function DialogueBox({ text, character, isComplete, onComplete }: Dialogu
 
   // Handle forced completion
   useEffect(() => {
+    console.log("DialogueBox 更新2", text)
     if (isComplete && displayedText !== textRef.current) {
       // Force complete the text
       setDisplayedText(textRef.current)
@@ -76,4 +83,13 @@ export function DialogueBox({ text, character, isComplete, onComplete }: Dialogu
       </div>
     </div>
   )
+},
+// 自定义比较函数
+(prevProps, nextProps) => {
+  return (
+    prevProps.text === nextProps.text &&
+    prevProps.character === nextProps.character &&
+    prevProps.isComplete === nextProps.isComplete
+  );
 }
+);
