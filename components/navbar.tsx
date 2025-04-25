@@ -35,7 +35,29 @@ export function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loginModalOpen, setLoginModalOpen] = useState(false)
+  const [credits, setCredits] = useState<number | null>(null)
   const searchRef = useRef<HTMLDivElement>(null)
+
+  // 获取用户积分
+  useEffect(() => {
+    const fetchCredits = async () => {
+      if (user) {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/credits`, {
+            credentials: "include", // 确保包含 cookies
+          })
+          if (res.ok) {
+            const data = await res.json()
+            setCredits(data.credits)
+          }
+        } catch (error) {
+          console.error('Failed to fetch credits:', error)
+        }
+      }
+    }
+
+    fetchCredits()
+  }, [user])
 
   // 处理搜索建议
   useEffect(() => {
@@ -192,6 +214,14 @@ export function Navbar() {
                   <PlusCircle className="mr-2 h-4 w-4" />
                   <span>创建游戏</span>
                 </DropdownMenuItem>
+
+
+                <DropdownMenuItem>
+                  <span>剩余积分: {credits ?? '加载中...'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+
+
                 <DropdownMenuItem onClick={() => router.push("/profile")}>
                   <UserCircle className="mr-2 h-4 w-4" />
                   <span>个人中心</span>
