@@ -31,37 +31,11 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
     setError(null)
   }
 
-  const validateNovel = async (text: string): Promise<boolean> => {
-    if (!text.trim()) {
-      setError("请输入小说内容")
-      return false
-    }
-
-    try {
-      const res = await fetch("/api/validate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content: text }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.message || "验证失败，请检查内容")
-        return false
-      }
-
-      return true
-    } catch (error) {
-      setError("验证请求失败，请稍后再试")
-      return false
-    }
-  }
-
   const handleSubmit = async () => {
-    const isValid = await validateNovel(novelText)
-    if (!isValid) return
+    if (!novelText.trim()) {
+      setError("请输入小说内容")
+      return
+    }
 
     setLoading(true)
     abortControllerRef.current = new AbortController()
@@ -83,13 +57,19 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
         throw new Error(data.message || "创建失败")
       }
 
+      const data = await res.json()
+      if (!data.task_id) {
+        throw new Error("创建失败")
+      }
+
       toast({
         title: "创建成功",
         description: "您的游戏正在生成中，请在个人中心查看进度",
       })
-
       onClose()
       router.push("/profile")
+
+
     } catch (error) {
       if ((error as Error).name !== "AbortError") {
         toast({
@@ -97,6 +77,7 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
           title: "创建失败",
           description: (error as Error).message || "请稍后再试",
         })
+        alert((error as Error).message || "请稍后再试")
       }
     } finally {
       setLoading(false)
