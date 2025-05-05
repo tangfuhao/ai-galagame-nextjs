@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/navbar"
 import { GameCardContainer } from "@/components/game-card-container"
 import { TagFilter } from "@/components/tag-filter"
+import { Suspense } from "react"
 
 export default function HomePage() {
   return (
@@ -14,13 +15,15 @@ export default function HomePage() {
 
         <section className="mb-10">
           <h2 className="text-2xl font-semibold mb-4">探索游戏</h2>
-          <TagFilter />
-          <GameCardContainer />
+          <Suspense>
+            <TagFilter />
+            <GameCardContainer />
+          </Suspense>
         </section>
       </main>
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} AI-Galgame 平台 | 所有权利保留
+          {new Date().getFullYear()} AI-Galgame 
         </div>
       </footer>
     </div>
