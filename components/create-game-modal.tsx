@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
 import { Loader2 } from "lucide-react"
+import { fetchApi } from "@/lib/api"
 
 type CreateGameModalProps = {
   isOpen: boolean
@@ -41,8 +42,7 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
     abortControllerRef.current = new AbortController()
 
     try {
-      const createGameUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/games/create`
-      const res = await fetch(createGameUrl, {
+      const res = await fetchApi('/games/create', {
         method: "POST",
         credentials: "include", // 确保包含 cookies
         headers: {
