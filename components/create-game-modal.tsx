@@ -110,7 +110,7 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
 
           <div className="flex justify-between items-center text-xs text-muted-foreground">
             <span>{charCount > 0 ? `${charCount} 字符` : "请输入内容"}</span>
-            <span>{charCount > 100000 ? "超出字数限制" : "最多 100,000 字符"}</span>
+            <span>{charCount > 10000 ? "超出字数限制" : "最多 10,000 字符"}</span>
           </div>
 
           {error && <div className="text-sm text-destructive">{error}</div>}
@@ -120,7 +120,7 @@ export function CreateGameModal({ isOpen, onClose }: CreateGameModalProps) {
           <Button variant="outline" onClick={handleCancel} disabled={loading}>
             取消
           </Button>
-          <Button onClick={handleSubmit} disabled={loading || charCount === 0 || charCount > 100000}>
+          <Button onClick={handleSubmit} disabled={loading || charCount === 0 || charCount > 10000}>
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

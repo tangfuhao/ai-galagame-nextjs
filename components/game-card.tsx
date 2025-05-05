@@ -11,11 +11,8 @@ type GameProps = {
   game: {
     id: string
     title: string
-    cover_image: string
-    author: {
-      id: string
-      username: string
-    }
+    cover_image?: string
+    user_name: string
     play_count: number
   }
 }
@@ -26,7 +23,7 @@ export function GameCard({ game }: GameProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const previewTimeoutRef = useRef<NodeJS.Timeout>()
 
-  const handleMouseEnter = () => {
+  const handleMouseEnter = (event: React.MouseEvent) => {
     setIsHovering(true)
 
     // 加载预览视频
@@ -91,9 +88,7 @@ export function GameCard({ game }: GameProps) {
         <h3 className="font-semibold text-lg mb-1 line-clamp-1">{game.title}</h3>
         <div className="flex items-center text-sm text-muted-foreground mb-2">
           <User className="h-3 w-3 mr-1" />
-          <Link href={`/author/${game.author.id}`} className="hover:underline">
-            {game.author.username}
-          </Link>
+          <span className="hover:underline">{game.user_name}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">游玩次数: {game.play_count}</span>

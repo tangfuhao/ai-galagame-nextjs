@@ -5,31 +5,34 @@ import { useSearchParams } from "next/navigation"
 import { GameCard } from "@/components/game-card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-type Game = {
+type RuntimeGame = {
   id: string
   title: string
-  cover_image: string
-  author: {
-    id: string
-    username: string
-  }
+  cover_image?: string
+  description?: string
+  user_name: string
+  user_avatar?: string
+  tags: string[]
   play_count: number
-  created_at: string
+  like_count: number
+  comment_count: number
+  published_at?: string
 }
 
 export function GameCardContainer() {
   const searchParams = useSearchParams()
   const tagFilter = searchParams.get("tag")
-  const [games, setGames] = useState<Game[]>([])
+  const [games, setGames] = useState<RuntimeGame[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchGames = async () => {
       setLoading(true)
       try {
-        const endpoint = tagFilter ? `/api/games?tag=${encodeURIComponent(tagFilter)}` : "/api/games/latest"
+        const endpoint = tagFilter ? `/games?tag=${encodeURIComponent(tagFilter)}` : "/games"
+        const gameListUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`
 
-        const res = await fetch(endpoint, {
+        const res = await fetch(gameListUrl, {
           signal: AbortSignal.timeout(15000), // 15秒超时
         })
 
@@ -78,7 +81,16 @@ export function GameCardContainer() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
       {games.map((game) => (
-        <GameCard key={game.id} game={game} />
+        <GameCard
+          key={game.id}
+          game={{
+            id: game.id,
+            title: game.title,
+            cover_image: game.cover_image,
+            user_name: game.user_name,
+            play_count: game.play_count,
+          }}
+        />
       ))}
     </div>
   )
