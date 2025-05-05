@@ -8,98 +8,60 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
 type GameProps = {
-  game: {
-    id: string
-    title: string
-    cover_image?: string
-    user_name: string
-    play_count: number
-  }
+  id: string
+  title: string
+  coverImage?: string
+  userName: string
+  playCount: number
 }
 
-export function GameCard({ game }: GameProps) {
+export function GameCard({ id, title, coverImage, userName, playCount }: GameProps) {
   const [isHovering, setIsHovering] = useState(false)
-  const [previewLoaded, setPreviewLoaded] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
-  const previewTimeoutRef = useRef<NodeJS.Timeout>()
-
-  const handleMouseEnter = (event: React.MouseEvent) => {
-    setIsHovering(true)
-
-    // 加载预览视频
-    if (videoRef.current && !previewLoaded) {
-      videoRef.current.src = `/api/preview/${game.id}`
-      videoRef.current.load()
-      setPreviewLoaded(true)
-    }
-
-    // 3秒后停止预览
-    previewTimeoutRef.current = setTimeout(() => {
-      setIsHovering(false)
-      if (videoRef.current) {
-        videoRef.current.pause()
-        videoRef.current.currentTime = 0
-      }
-    }, 3000)
-  }
-
-  const handleMouseLeave = () => {
-    setIsHovering(false)
-    if (previewTimeoutRef.current) {
-      clearTimeout(previewTimeoutRef.current)
-    }
-    if (videoRef.current) {
-      videoRef.current.pause()
-      videoRef.current.currentTime = 0
-    }
-  }
+  const imageRef = useRef<HTMLImageElement>(null)
 
   return (
-    <Card
-      className="overflow-hidden transition-all duration-200 hover:shadow-md"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <div className="relative aspect-[2/3] w-full overflow-hidden">
-        {isHovering && (
-          <video
-            ref={videoRef}
-            className="absolute inset-0 w-full h-full object-cover z-10"
-            autoPlay
-            muted
-            playsInline
-          />
-        )}
-
-        <Image
-          src={game.cover_image || "/placeholder.svg"}
-          alt={game.title}
-          fill
-          className="object-cover"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          onError={(e) => {
-            // 图片加载失败时显示占位图
-            ;(e.target as HTMLImageElement).src = "/placeholder.svg?height=600&width=400"
-          }}
-        />
-      </div>
-
-      <CardContent className="p-4">
-        <h3 className="font-semibold text-lg mb-1 line-clamp-1">{game.title}</h3>
-        <div className="flex items-center text-sm text-muted-foreground mb-2">
-          <User className="h-3 w-3 mr-1" />
-          <span className="hover:underline">{game.user_name}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">游玩次数: {game.play_count}</span>
-          <Link href={`/game/${game.id}`}>
-            <Button size="sm" variant="outline" className="gap-1">
-              <Play className="h-3 w-3" />
-              游玩
-            </Button>
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+    <Link href={`/game/${id}`}>
+      <Card
+        className="relative overflow-hidden group cursor-pointer"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+      >
+        <CardContent className="p-0">
+          <div className="relative aspect-video">
+            {coverImage ? (
+              <Image
+                ref={imageRef}
+                src={coverImage}
+                alt={title}
+                fill
+                className="object-cover transition-transform duration-300 group-hover:scale-110"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            ) : (
+              <div className="w-full h-full bg-secondary flex items-center justify-center">
+                <span className="text-muted-foreground">No Image</span>
+              </div>
+            )}
+            {isHovering && (
+              <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <Button variant="secondary" size="sm">
+                  <Play className="w-4 h-4 mr-2" />
+                  Play
+                </Button>
+              </div>
+            )}
+          </div>
+          <div className="p-4">
+            <h3 className="font-semibold mb-2 line-clamp-1">{title}</h3>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <User className="w-4 h-4 mr-1" />
+              <span className="mr-4">{userName}</span>
+              <Play className="w-4 h-4 mr-1" />
+              <span>{playCount}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   )
 }

@@ -3,6 +3,7 @@
 import { createContext, useState, useEffect, type ReactNode } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
+import { fetchApi } from './api';
 
 type User = {
   id: string
@@ -50,12 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // 使用环境变量构建获取用户信息的 URL
-        const meUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`
-
-        const res = await fetch(meUrl, {
-          credentials: "include", // 确保包含 cookies
-        })
+        const res = await fetchApi('/auth/me');
 
         if (res.ok) {
           const userResult = await res.json()

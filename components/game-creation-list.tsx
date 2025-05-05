@@ -9,6 +9,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/components/ui/use-toast"
+import { fetchApi } from '@/lib/api';
+import { GameCard } from "@/components/game-card";
 
 type GameCreation = {
   id: string
@@ -19,6 +21,8 @@ type GameCreation = {
   progress: number
   created_at: string
   error_message?: string
+  user_name?: string
+  play_count?: number
 }
 
 export function GameCreationList() {
@@ -28,12 +32,9 @@ export function GameCreationList() {
   const [loading, setLoading] = useState(true)
 
   const fetchGames = async () => {
+    setLoading(true);
     try {
-      const myGamesUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/me/games`
-      const res = await fetch(myGamesUrl, {
-        credentials: "include", // 确保包含 cookies
-        signal: AbortSignal.timeout(15000), // 15秒超时
-      })
+      const res = await fetchApi('/user/me/games');
 
       if (res.ok) {
         const data = await res.json()
@@ -68,11 +69,9 @@ export function GameCreationList() {
 
   const handleRetry = async (gameId: string) => {
     try {
-      const retryGameUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/games/${gameId}/regenerate`
-      const res = await fetch(retryGameUrl, {
-        credentials: "include", // 确保包含 cookies
-        method: "POST",
-      })
+      const res = await fetchApi(`/games/${gameId}/regenerate`, {
+        method: 'POST'
+      });
 
       if (res.ok) {
         toast({
@@ -101,18 +100,18 @@ export function GameCreationList() {
       return
     }
     try {
-      const deleteUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/user/me/games/${gameId}`
-      const res = await fetch(deleteUrl, {
-        method: "DELETE",
-        credentials: "include",
-      })
-      if (!res.ok) {
+      const res = await fetchApi(`/user/me/games/${gameId}`, {
+        method: 'DELETE'
+      });
+
+      if (res.ok) {
+        setGames((prevGames) => prevGames.filter((game) => game.id !== gameId))
+        toast({
+          description: "游戏已删除",
+        })
+      } else {
         throw new Error("删除失败")
       }
-      setGames((prevGames) => prevGames.filter((game) => game.id !== gameId))
-      toast({
-        description: "游戏已删除",
-      })
     } catch (error) {
       toast({
         variant: "destructive",

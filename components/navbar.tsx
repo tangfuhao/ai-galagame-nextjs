@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/lib/use-auth"
+import { fetchApi } from '@/lib/api';
 import { CreateGameModal } from "@/components/create-game-modal"
 import { LoginModal } from "@/components/login-modal"
 
@@ -43,9 +44,7 @@ export function Navbar() {
     const fetchCredits = async () => {
       if (user) {
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/user/credits`, {
-            credentials: "include", // 确保包含 cookies
-          })
+          const res = await fetchApi('/user/credits');
           if (res.ok) {
             const data = await res.json()
             setCredits(data.credits)
@@ -62,9 +61,9 @@ export function Navbar() {
   // 处理搜索建议
   useEffect(() => {
     const fetchSuggestions = async () => {
-      if (searchQuery.length >= 2) {
+      if (searchQuery.trim()) {
         try {
-          const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(searchQuery)}`)
+          const res = await fetchApi(`/api/search/suggest?q=${encodeURIComponent(searchQuery)}`, { skipAuth: true });
           if (res.ok) {
             const data = await res.json()
             setSuggestions(data)

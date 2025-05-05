@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import { fetchApi } from '@/lib/api';
 
 type Tag = {
   id: string
@@ -21,7 +22,7 @@ export function TagFilter() {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const res = await fetch("/api/tags")
+        const res = await fetchApi("/api/tags", { skipAuth: true });
         if (res.ok) {
           const data = await res.json()
           setTags(data)

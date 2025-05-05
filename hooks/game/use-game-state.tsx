@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import { GameData, Chapter, Branch, Character, Command, Resource } from "@/types/game"
 import { useAudioManager } from "@/lib/audio-manager-provider"
+import { fetchApi } from '@/lib/api';
 
 interface GameHistory {
   current_chapter: string
@@ -94,8 +95,7 @@ export function useGameState({ gameId }: UseGameStateProps) {
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        const fetchGameUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/games/${gameId}`
-        const res = await fetch(fetchGameUrl)
+        const res = await fetchApi(`/games/${gameId}`);
         if (!res.ok) {
           throw new Error("Failed to load game data")
         }

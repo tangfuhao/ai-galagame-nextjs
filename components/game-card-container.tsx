@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { GameCard } from "@/components/game-card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { fetchApi } from '@/lib/api';
 
 type RuntimeGame = {
   id: string
@@ -29,12 +30,14 @@ export function GameCardContainer() {
     const fetchGames = async () => {
       setLoading(true)
       try {
-        const endpoint = tagFilter ? `/games?tag=${encodeURIComponent(tagFilter)}` : "/games"
-        const gameListUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}`
-
-        const res = await fetch(gameListUrl, {
-          signal: AbortSignal.timeout(15000), // 15秒超时
-        })
+        const queryParams = new URLSearchParams()
+        if (tagFilter) {
+          queryParams.set("tag", tagFilter)
+        }
+        
+        const queryString = queryParams.toString();
+        const url = queryString ? `/games?${queryString}` : '/games';
+        const res = await fetchApi(url, { skipAuth: true });
 
         if (res.ok) {
           const data = await res.json()
@@ -83,13 +86,11 @@ export function GameCardContainer() {
       {games.map((game) => (
         <GameCard
           key={game.id}
-          game={{
-            id: game.id,
-            title: game.title,
-            cover_image: game.cover_image,
-            user_name: game.user_name,
-            play_count: game.play_count,
-          }}
+          id={game.id}
+          title={game.title}
+          coverImage={game.cover_image}
+          userName={game.user_name}
+          playCount={game.play_count}
         />
       ))}
     </div>

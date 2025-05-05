@@ -8,12 +8,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Link from "next/link"
+import { fetchApi } from '@/lib/api';
 
 type SearchResults = {
   games: Array<{
     id: string
     title: string
-    cover_image: string
+    cover_image?: string
     author: {
       id: string
       username: string
@@ -38,9 +39,7 @@ export default function SearchPage() {
     const fetchSearchResults = async () => {
       setLoading(true)
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
-          signal: AbortSignal.timeout(15000), // 15秒超时
-        })
+        const res = await fetchApi(`/api/search?q=${encodeURIComponent(query)}`, { skipAuth: true })
 
         if (res.ok) {
           const data = await res.json()
@@ -124,7 +123,14 @@ export default function SearchPage() {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                       {results.games.map((game) => (
-                        <GameCard key={game.id} game={game} />
+                        <GameCard
+                          key={game.id}
+                          id={game.id}
+                          title={game.title}
+                          coverImage={game.cover_image}
+                          userName={game.author.username}
+                          playCount={game.play_count}
+                        />
                       ))}
                     </div>
                   )}
