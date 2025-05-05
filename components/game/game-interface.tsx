@@ -10,8 +10,19 @@ import { useGameState } from "@/hooks/game/use-game-state"
 import { useResourceLoader } from "@/hooks/game/use-resource-loader"
 
 export function GameInterface({ gameId }: { gameId: string }) {
-  const { background, currentChapter, currentCharacter, dialogueText, narrationText, choices, isLoading, makeChoice, advanceStory } =
-    useGameState({ gameId })
+  const {
+    background,
+    currentChapter,
+    currentCharacter,
+    dialogueText,
+    narrationText,
+    choices,
+    isLoading,
+    handleChoice,
+    handleNextChapter,
+    advanceStory,
+  } = useGameState(gameId)
+
 
   const { loadingProgress } = useResourceLoader(currentChapter?.dependencies || [])
 
@@ -97,7 +108,7 @@ export function GameInterface({ gameId }: { gameId: string }) {
       {/* Choice Options Layer - stop propagation on this layer */}
       {choices.length > 0 && (
         <div onClick={(e) => e.stopPropagation()}>
-          <ChoiceOptions options={choices} onSelect={makeChoice} />
+          <ChoiceOptions options={choices} onSelect={handleChoice} />
         </div>
       )}
     </div>

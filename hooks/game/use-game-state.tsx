@@ -6,21 +6,20 @@ import { useAudioManager } from "@/lib/audio-manager-provider"
 import { fetchApi } from '@/lib/api';
 
 interface GameHistory {
-  current_chapter: string
-  unlocked_branches: string[]
+  current_chapter: number
+  current_branch: number
+  choices: string[]
   inventory: { items: string[]; skills: string[] }
 }
 
-interface UseGameStateProps {
-  gameId: string
-}
 
-export function useGameState({ gameId }: UseGameStateProps) {
+export function useGameState(gameId: string) {
   const { playBg, playDialogue } = useAudioManager()  
   const [gameData, setGameData] = useState<GameData | null>(null)
   const [gameHistory, setGameHistory] = useState<GameHistory>({
-    current_chapter: "1", // 设置默认值为第一章
-    unlocked_branches: ["main"], // 设置默认值为主分支
+    current_chapter: 0, // 设置默认值为第一章（索引0）
+    current_branch: 0,
+    choices: [],
     inventory: { items: [], skills: [] },
   })
 
@@ -93,9 +92,9 @@ export function useGameState({ gameId }: UseGameStateProps) {
 
   // Load game data
   useEffect(() => {
-    const loadGameData = async () => {
+    const loadGameData = async (abortSignal: AbortSignal) => {
       try {
-        const res = await fetchApi(`/games/${gameId}`);
+        const res = await fetchApi(`/games/${gameId}`, { signal: abortSignal });
         if (!res.ok) {
           throw new Error("Failed to load game data")
         }
@@ -112,14 +111,11 @@ export function useGameState({ gameId }: UseGameStateProps) {
         setGameData(processedData)
         
         // Set initial chapter and branch
-        const initialChapter = processedData.chapters.find(
-          (c: Chapter) => c.id === gameHistory.current_chapter
-        )
+        const initialChapter = processedData.chapters[gameHistory.current_chapter]
+        
         if (initialChapter) {
           setCurrentChapter(initialChapter)
-          const initialBranch = initialChapter.branches.find(
-            (b: Branch) => b.name === gameHistory.unlocked_branches[0]
-          )
+          const initialBranch = initialChapter.branches[gameHistory.current_branch]
           if (initialBranch) {
             setCurrentBranch(initialBranch)
             setInstructionIndex(0)
@@ -130,18 +126,23 @@ export function useGameState({ gameId }: UseGameStateProps) {
         console.error("Failed to load game data:", error)
       }
     }
+    const abortController = new AbortController()
 
-    loadGameData()
+    loadGameData(abortController.signal)
+
+    return () => {
+      abortController.abort("Game unmounted")
+    }
   }, [gameId])
 
   // Remove the old chapter loading effect since we handle it in loadGameData now
   useEffect(() => {
     if (!gameData) return
 
-    const chapter = gameData.chapters.find((chapter: Chapter) => chapter.id === gameHistory.current_chapter)
+    const chapter = gameData.chapters[gameHistory.current_chapter]
     if (chapter && chapter.id !== currentChapter?.id) {
       setCurrentChapter(chapter)
-      const branch = chapter.branches.find((branch: Branch) => branch.name === gameHistory.unlocked_branches[0])
+      const branch = chapter.branches[gameHistory.current_branch]
       if (branch) {
         setCurrentBranch(branch)
         setInstructionIndex(0)
@@ -193,6 +194,7 @@ export function useGameState({ gameId }: UseGameStateProps) {
         setNarrationText(null)
         setCurrentCharacter(null)
         setChoices([])
+        console.log("choice instruction", instruction)
         if (instruction.content) {
           try {
             const options = JSON.parse(instruction.content)
@@ -239,33 +241,47 @@ export function useGameState({ gameId }: UseGameStateProps) {
       return true
     })()
 
+
     if (isTextComplete && instructionIndex < currentBranch.commands.length - 1) {
       setInstructionIndex((prev: number) => prev + 1)
     }
   }, [currentBranch, instructionIndex])
 
-  // Handle player choice
-  const makeChoice = useCallback(
-    (choiceId: string) => {
-      if (!currentBranch || !currentChapter) return
+  const handleNextChapter = useCallback(() => {
+    if (!gameData || !currentChapter) return
 
-      const instruction = currentBranch.commands[instructionIndex]
-      if (instruction.type !== "choice") return
-      const targetBranch = currentChapter.branches.find((b: Branch) => b.name === choiceId)
-      if (targetBranch) {
-        // Update game history
-        setGameHistory((prev: GameHistory) => ({
-          ...prev,
-          unlocked_branches: [...prev.unlocked_branches, targetBranch.name],
-        }))
+    const currentIndex = gameData.chapters.indexOf(currentChapter)
+    const nextChapter = gameData.chapters[currentIndex + 1]
 
-        // Switch to new branch
-        setCurrentBranch(targetBranch)
-        setInstructionIndex(0)
-      }
-    },
-    [currentBranch, currentChapter, instructionIndex],
-  )
+    if (nextChapter) {
+      setGameHistory((prev) => ({
+        ...prev,
+        current_chapter: currentIndex + 1,
+        current_branch: 0
+      }))
+      setCurrentChapter(nextChapter)
+      setCurrentBranch(nextChapter.branches[0])
+      setInstructionIndex(0)
+    }
+  }, [gameData, currentChapter])
+
+  const handleChoice = useCallback((choice: string) => {
+    if (!currentChapter || !currentBranch) return
+
+    const targetBranch = currentChapter.branches.find((b) => b.name === choice)
+    if (targetBranch) {
+      // Update game history
+      setGameHistory((prev) => ({
+        ...prev,
+        current_branch: currentChapter.branches.indexOf(targetBranch),
+        choices: [...prev.choices, choice]
+      }))
+
+      // Switch to new branch
+      setCurrentBranch(targetBranch)
+      setInstructionIndex(0)
+    }
+  }, [currentChapter, currentBranch])
 
   return {
     background,
@@ -275,7 +291,8 @@ export function useGameState({ gameId }: UseGameStateProps) {
     narrationText,
     choices,
     isLoading,
-    makeChoice,
+    handleNextChapter,
+    handleChoice,
     advanceStory,
   }
 }
