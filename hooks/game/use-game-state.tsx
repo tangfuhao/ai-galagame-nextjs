@@ -242,8 +242,22 @@ export function useGameState(gameId: string) {
     })()
 
 
-    if (isTextComplete && instructionIndex < currentBranch.commands.length - 1) {
-      setInstructionIndex((prev: number) => prev + 1)
+    if (isTextComplete ) {
+      if (instructionIndex < currentBranch.commands.length - 1) {
+        setInstructionIndex((prev: number) => prev + 1)
+      }else{
+        if (!currentChapter) return
+        //如果没有下一条指令，前进到下一个Branch
+        const currentIndex = currentChapter.branches.indexOf(currentBranch)
+        const nextBranch = currentChapter.branches[currentIndex + 1]
+        if (nextBranch) {
+          setCurrentBranch(nextBranch)
+          setInstructionIndex(0)
+        }else{
+          //如果没有下一个Branch，前进到下一个Chapter
+          handleNextChapter()
+        }
+      }
     }
   }, [currentBranch, instructionIndex])
 
