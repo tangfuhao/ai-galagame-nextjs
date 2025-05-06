@@ -22,9 +22,9 @@ export function GameInterface({ gameId }: { gameId: string }) {
     handleNextChapter,
     advanceStory,
   } = useGameState(gameId)
+  console.log("currentCharacter", currentCharacter)
 
-
-  const { loadingProgress } = useResourceLoader(currentChapter?.dependencies || [])
+  const { loadingProgress, isLoading: isLoadingResources } = useResourceLoader(currentChapter?.dependencies || [])
 
   // Track text completion state
   const [isDialogueComplete, setIsDialogueComplete] = useState(false)
@@ -60,7 +60,7 @@ export function GameInterface({ gameId }: { gameId: string }) {
     }
   }, [narrationText])
 
-  if (isLoading) {
+  if (isLoading || isLoadingResources) {
     return (
       <div className="w-full flex-1 flex items-center justify-center bg-black text-white">
         <div className="w-64 bg-gray-800 rounded-lg overflow-hidden">

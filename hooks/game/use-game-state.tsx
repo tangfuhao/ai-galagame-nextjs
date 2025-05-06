@@ -173,7 +173,9 @@ export function useGameState(gameId: string) {
         setCurrentCharacter(null)
         setDialogueText(instruction.content || "") // 使用空字符串作为默认值
 
+        console.log("instruction.name", instruction.name)
         const characterImage = charactersCache.current.get(instruction.name)
+        console.log("charactersCache", charactersCache.current)
         setCurrentCharacter({
           name: instruction.name,
           oss_url: characterImage || "",
@@ -234,7 +236,7 @@ export function useGameState(gameId: string) {
     // Check if current text display is complete
     const isTextComplete = (() => {
       const currentInstruction = currentBranch.commands[instructionIndex]
-      if (currentInstruction.type === "dialogue" || currentInstruction.type === "narration") {
+      if (currentInstruction && (currentInstruction.type === "dialogue" || currentInstruction.type === "narration")) {
         // This is handled by the UI components now
         return true
       }
