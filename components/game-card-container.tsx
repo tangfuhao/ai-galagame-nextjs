@@ -36,7 +36,7 @@ export function GameCardContainer() {
         }
         
         const queryString = queryParams.toString();
-        const url = queryString ? `/games?${queryString}` : '/games/';
+        const url = queryString ? `/games/?${queryString}` : '/games/';
         const res = await fetchApi(url, { skipAuth: true });
 
         if (res.ok) {
