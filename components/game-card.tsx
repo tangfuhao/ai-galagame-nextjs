@@ -39,14 +39,14 @@ export function GameCard({ id, title, coverImage, userName, playCount }: GamePro
               />
             ) : (
               <div className="w-full h-full bg-secondary flex items-center justify-center">
-                <span className="text-muted-foreground">No Image</span>
+                <span className="text-muted-foreground">没有封面</span>
               </div>
             )}
             {isHovering && (
               <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                 <Button variant="secondary" size="sm">
                   <Play className="w-4 h-4 mr-2" />
-                  Play
+                  游玩
                 </Button>
               </div>
             )}
@@ -57,7 +57,7 @@ export function GameCard({ id, title, coverImage, userName, playCount }: GamePro
               <User className="w-4 h-4 mr-1" />
               <span className="mr-4">{userName}</span>
               <Play className="w-4 h-4 mr-1" />
-              <span>{playCount}</span>
+              <span>{playCount}次游玩</span>
             </div>
           </div>
         </CardContent>
